@@ -1,3 +1,5 @@
+.DS_Store
+
 # Project Specific files
 Instructions/*
 Necessary_Files/*
@@ -8,6 +10,10 @@ server/src/generated/prisma
 # Project env files
 client/.env*
 server/.env*
+
+# Project env files
+client/.DS_Store
+server/.DS_Store
 
 # Project node module fils
 client/node_modules
