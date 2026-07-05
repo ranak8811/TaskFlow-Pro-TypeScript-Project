@@ -1,12 +1,14 @@
 import { logMessage } from "./utils/logger.js";
-import { User } from "./types/user.js"; // ইউজার ইন্টারফেস ইম্পোর্ট করলাম
+import { Task, TaskStatus } from "./types/task.js"; // টাস্ক এবং এনাম ইম্পোর্ট করলাম
 
-// User ইন্টারফেস অনুযায়ী একটি নতুন ইউজার অবজেক্ট তৈরি করলাম
-const newUser: User = {
-  id: "usr-101",
-  name: "Anwar Hossain",
-  email: "anwar@example.com",
-  role: "admin", // bio অপশনাল হওয়ায় এখানে তা না দিলেও কোনো এরর নেই
+// Task ইন্টারফেস এবং এনাম ব্যবহার করে একটি নতুন টাস্ক অবজেক্ট তৈরি করলাম
+const myTask: Task = {
+  id: "tsk-201",
+  title: "Setup Database Schema",
+  status: TaskStatus.InProgress, // এনাম ভ্যালু ব্যবহার করলাম
+  tags: ["database", "prisma", "postgres"], // স্ট্রিং অ্যারে
+  assignee: ["usr-101", "Anwar Hossain"], // টাপল: [ID, Name]
 };
 
-logMessage(`Created user: ${newUser.name} with role: ${newUser.role}`);
+logMessage(`Task "${myTask.title}" is currently: ${myTask.status}`);
+logMessage(`Assigned to: ${myTask.assignee[1]} (ID: ${myTask.assignee[0]})`);
