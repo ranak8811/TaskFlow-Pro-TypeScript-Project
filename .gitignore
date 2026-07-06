@@ -49,7 +49,7 @@ Instructions/*
 Necessary_Files/*
 
 # Prisma files
-server/src/generated/prisma
+server/src/generated/*
 
 # Project env files
 client/.env*

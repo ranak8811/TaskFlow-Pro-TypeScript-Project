@@ -1,0 +1,26 @@
+datasource db {
+  provider = "postgresql" // url প্রপার্টিটি এখানে আর থাকবে না
+}
+
+generator client {
+  provider = "prisma-client" // প্রিজমা ৭-এর মডার্ন ক্লায়েন্ট জেনারেটর
+  output   = "../src/generated/client" // সরাসরি সোর্স ফোল্ডারে জেনারেট হবে
+}
+
+// ১. ইউজার মডেল (User Model)
+model User {
+  id    String @id @default(uuid()) // UUID প্রিমারি কি
+  name  String
+  email String @unique
+  tasks Task[] // ওয়ান-টু-মেনি রিলেশনশিপ (একজন ইউজারের অনেক টাস্ক থাকতে পারে)
+}
+
+// ২. টাস্ক মডেল (Task Model)
+model Task {
+  id          String  @id @default(uuid())
+  title       String
+  description String?
+  status      String  @default("TODO") // ডিফল্ট স্ট্যাটাস
+  userId      String
+  assignee    User    @relation(fields: [userId], references: [id]) // রিলেশনশিপ ম্যাপিং
+}
