@@ -1,11 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const error_handler_js_1 = require("./utils/error-handler.js");
+const task_processor_js_1 = require("./utils/task-processor.js");
 const logger_js_1 = require("./utils/logger.js");
-(0, logger_js_1.logMessage)("App running diagnostics...");
-(0, error_handler_js_1.processData)("taskflow diagnostics"); // string পাঠালাম
-(0, error_handler_js_1.processData)(100); // number পাঠালাম
-(0, error_handler_js_1.processData)(true); // unsupported type পাঠালাম
-// ক্রিটিক্যাল এরর থ্রো করা হলো (ফাংশনটি never রিটার্ন করায় এর নিচের কোড আর রান হবে না)
-(0, error_handler_js_1.throwAppError)("Database failed to respond!");
-// logMessage("This will never print!"); // এই লাইনে এডিটর বলবে: Unreachable code detected
+// createTask কল করা হচ্ছে (ডিফল্ট ও অপশনাল টেস্ট করা)
+const t1 = (0, task_processor_js_1.createTask)("Setup Express"); // description ও priority ছাড়াই
+const t2 = (0, task_processor_js_1.createTask)("Configure Router", "Set up backend routing", "HIGH"); // সব প্যারামিটার সহ
+(0, logger_js_1.logMessage)(`Task 1: ${t1.title} (Priority: ${t1.priority})`);
+(0, logger_js_1.logMessage)(`Task 2: ${t2.title} (Priority: ${t2.priority}) - ${t2.description}`);
+const myTasks = ["Database Setup", "Auth Middleware"];
+// processTasks কল করা এবং কলব্যাক পাস করা
+(0, task_processor_js_1.processTasks)(myTasks, (completed) => {
+    (0, logger_js_1.logMessage)(`Callback: Completed "${completed}" successfully!`);
+});

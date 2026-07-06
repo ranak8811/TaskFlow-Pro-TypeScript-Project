@@ -1,13 +1,18 @@
-import { processData, throwAppError } from "./utils/error-handler.js";
+import { createTask, processTasks } from "./utils/task-processor.js";
 import { logMessage } from "./utils/logger.js";
 
-logMessage("App running diagnostics...");
+// createTask কল করা হচ্ছে (ডিফল্ট ও অপশনাল টেস্ট করা)
+const t1 = createTask("Setup Express"); // description ও priority ছাড়াই
+const t2 = createTask("Configure Router", "Set up backend routing", "HIGH"); // সব প্যারামিটার সহ
 
-processData("taskflow diagnostics"); // string পাঠালাম
-processData(100); // number পাঠালাম
-processData(true); // unsupported type পাঠালাম
+logMessage(`Task 1: ${t1.title} (Priority: ${t1.priority})`);
+logMessage(
+  `Task 2: ${t2.title} (Priority: ${t2.priority}) - ${t2.description}`,
+);
 
-// ক্রিটিক্যাল এরর থ্রো করা হলো (ফাংশনটি never রিটার্ন করায় এর নিচের কোড আর রান হবে না)
-throwAppError("Database failed to respond!");
+const myTasks = ["Database Setup", "Auth Middleware"];
 
-// logMessage("This will never print!"); // এই লাইনে এডিটর বলবে: Unreachable code detected
+// processTasks কল করা এবং কলব্যাক পাস করা
+processTasks(myTasks, (completed) => {
+  logMessage(`Callback: Completed "${completed}" successfully!`);
+});
