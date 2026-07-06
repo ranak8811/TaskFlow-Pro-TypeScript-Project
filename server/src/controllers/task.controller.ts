@@ -1,32 +1,44 @@
 import { RequestHandler } from "express";
-import { AppError } from "../utils/app-error.js"; // AppError ইম্পোর্ট করলাম
+import { TaskService } from "../services/task.service.js"; // সার্ভিস ইম্পোর্ট
 
 interface CreateTaskBody {
   title: string;
 }
 
-export const createTask: RequestHandler<{}, {}, CreateTaskBody> = (
+// টাস্ক তৈরি করার কন্ট্রোলার
+export const createTask: RequestHandler<{}, {}, CreateTaskBody> = async (
   req,
   res,
+  next,
 ) => {
-  const { title } = req.body;
-  res.status(201).json({ success: true, data: { id: "tsk-101", title } });
+  try {
+    const { title } = req.body;
+    const currentUser = req.user!; // auth middleware থেকে প্রাপ্ত ইউজার
+
+    // সার্ভিস লেয়ারের সাহায্যে টাস্ক তৈরি
+    const newTask = await TaskService.createNewTask(title, currentUser.id);
+
+    res.status(201).json({
+      success: true,
+      data: newTask,
+    });
+  } catch (error) {
+    next(error); // এরর ঘটলে গ্লোবাল এরর হ্যান্ডলারে ফরওয়ার্ড
+  }
 };
 
-// টাস্ক গেট করার কন্ট্রোলার
-export const getTasks: RequestHandler = (req, res, next) => {
-  const currentUser = req.user;
+// টাস্ক আইডি দিয়ে ডিটেইলস গেট করার কন্ট্রোলার
+export const getTaskDetails: RequestHandler<{ id: string }> = async (req, res, next) => {
+  try {
+    const { id } = req.params; // ইউআরএল ডায়নামিক আইডি
 
-  // টেস্ট করার জন্য কুয়েরি প্যারামিটার চেক করে এরর ট্রিগার করার লজিক
-  if (req.query.error === "true") {
-    // next() এর ভেতরে এরর অবজেক্ট পাঠালে এক্সপ্রেস সরাসরি গ্লোবাল এরর হ্যান্ডলারে চলে যায়
-    return next(new AppError("Simulated database fail during task fetch", 400));
+    const task = await TaskService.getTaskById(id);
+
+    res.status(200).json({
+      success: true,
+      data: task,
+    });
+  } catch (error) {
+    next(error);
   }
-
-  res.status(200).json({
-    success: true,
-    message: `Tasks fetched successfully for user: ${currentUser?.id}`,
-    userRole: currentUser?.role,
-    data: [],
-  });
 };

@@ -51,6 +51,9 @@ Necessary_Files/*
 # Prisma files
 server/src/generated/*
 
+# Project dist/output files
+server/dist/*
+
 # Project env files
 client/.env*
 server/.env*

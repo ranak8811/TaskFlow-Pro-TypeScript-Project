@@ -1,27 +1,38 @@
 import { Request, Response, NextFunction } from "express";
+import { prisma } from "../config/db.js"; // প্রিজমা ইম্পোর্ট
 
-// ইউজার অথেন্টিকেশন চেক করার মিডলওয়্যার
-export function authenticateUser(
+export async function authenticateUser(
   req: Request,
   res: Response,
   next: NextFunction,
-): void {
+): Promise<void> {
   const authHeader = req.headers.authorization;
 
-  // হেডার ও টোকেন ফরমেট চেক
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({
-      success: false,
-      message: "Unauthorized: Access token is missing or invalid",
-    });
-    return; // কাজ শেষ, পরবর্তী চেইনে যাবে না
+    res.status(401).json({ success: false, message: "Unauthorized" });
+    return;
   }
 
-  // মক টোকেন ডিকোডিং ভ্যালু (বাস্তবে এখানে JWT ভেরিফিকেশন হবে)
-  req.user = {
-    id: "usr-101",
-    role: "admin", // req.user এখন টাইপস্ক্রিপ্টে বৈধ
-  };
+  try {
+    // ডাটাবেজে মক ইউজার আইডি 'usr-101' সিঙ্ক করা হচ্ছে (ফরেন কি এরর এড়াতে)
+    // upsert মেথডটি ডাটা থাকলে কিছু করে না, না থাকলে তৈরি করে
+    await prisma.user.upsert({
+      where: { email: "anwar@example.com" },
+      update: {},
+      create: {
+        id: "usr-101",
+        name: "Anwar Hossain",
+        email: "anwar@example.com",
+      },
+    });
 
-  next(); // সাকসেসফুল হলে পরবর্তী কন্ট্রোলারে যাবে
+    req.user = {
+      id: "usr-101",
+      role: "admin",
+    };
+
+    next();
+  } catch (error) {
+    next(error);
+  }
 }
