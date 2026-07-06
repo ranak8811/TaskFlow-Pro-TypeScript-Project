@@ -1,41 +1,15 @@
 import express, { Request, Response } from "express";
+import { config } from "./config/env.js"; // কাস্টম কনফিগ ইম্পোর্ট করলাম
 import { logMessage } from "./utils/logger.js";
 
 const app = express();
-app.use(express.json()); // JSON রিকোয়েস্ট বডি পার্স করার মিডলওয়্যার
+app.use(express.json());
 
-// ১. টাস্ক তৈরি করার রিকোয়েস্ট বডির স্ট্রাকচার ডিফাইন করলাম
-interface CreateTaskRequestBody {
-  title: string;
-  description?: string; // অপশনাল
-}
-
-// ২. হোম রাউট (GET /)
 app.get("/", (req: Request, res: Response) => {
-  res.json({ message: "Welcome to TaskFlow Pro API!" });
+  res.json({ message: "TaskFlow Pro API is running!" });
 });
 
-// ৩. টাস্ক তৈরি করার রাউট (POST /tasks)
-// Request এর ৩ নম্বর জেনেরিক প্যারামিটারে CreateTaskRequestBody সেট করা হয়েছে
-app.post(
-  "/tasks",
-  (req: Request<{}, {}, CreateTaskRequestBody>, res: Response) => {
-    const { title, description } = req.body; // টাইপস্ক্রিপ্ট এখন title এবং description এর টাইপ চেনে
-
-    logMessage(`API Request received: Creating task "${title}"`);
-
-    res.status(201).json({
-      success: true,
-      data: {
-        id: "tsk-99",
-        title,
-        description: description || "No description provided",
-      },
-    });
-  },
-);
-
-const PORT = 3000;
-app.listen(PORT, () => {
-  logMessage(`Express server successfully running on port ${PORT}`);
+// কনফিগ থেকে টাইপ-সেফ পোর্ট রিড করা হলো
+app.listen(config.port, () => {
+  logMessage(`Server listening on port ${config.port} in [${config.env}] mode`);
 });
