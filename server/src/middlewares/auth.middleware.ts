@@ -1,36 +1,28 @@
 import { Request, Response, NextFunction } from "express";
-import { prisma } from "../config/db.js"; // প্রিজমা ইম্পোর্ট
+import { verifyToken } from "../utils/jwt.js";
+import { config } from "../config/env.js";
+import { AppError } from "../utils/app-error.js";
 
-export async function authenticateUser(
+export function authenticateUser(
   req: Request,
   res: Response,
   next: NextFunction,
-): Promise<void> {
+): void {
   const authHeader = req.headers.authorization;
 
+  // হেডার ফরম্যাট চেক (Bearer Token)
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
+    throw new AppError("Authentication token is missing or malformed", 401);
   }
 
+  const token = authHeader.split(" ")[1];
+
   try {
-    // ডাটাবেজে মক ইউজার আইডি 'usr-101' সিঙ্ক করা হচ্ছে (ফরেন কি এরর এড়াতে)
-    // upsert মেথডটি ডাটা থাকলে কিছু করে না, না থাকলে তৈরি করে
-    await prisma.user.upsert({
-      where: { email: "anwar@example.com" },
-      update: {},
-      create: {
-        id: "usr-101",
-        name: "Anwar Hossain",
-        email: "anwar@example.com",
-      },
-    });
+    // অ্যাক্সেস সিক্রেট দিয়ে টোকেন ডিকোড ও ভেরিফাই করলাম
+    const decoded = verifyToken(token, config.jwtAccessSecret);
 
-    req.user = {
-      id: "usr-101",
-      role: "admin",
-    };
-
+    // req.user এ ডিকোড করা ইউজার পেলোড সেট করলাম
+    req.user = decoded;
     next();
   } catch (error) {
     next(error);

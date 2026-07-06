@@ -3,10 +3,11 @@ declare global {
     interface ProcessEnv {
       PORT?: string;
       DATABASE_URL: string;
-      NODE_ENV: "development" | "production" | "test"; // লিটারেল ইউনিয়ন টাইপ
+      NODE_ENV: "development" | "production" | "test";
+      JWT_ACCESS_SECRET: string; // অ্যাক্সেস টোকেন সিক্রেট টাইপ
+      JWT_REFRESH_SECRET: string; // রিফ্রেশ টোকেন সিক্রেট টাইপ
     }
   }
 }
 
-// ফাইলটিকে একটি মডিউল হিসেবে গণ্য করতে এক্সপোর্ট স্টেটমেন্ট আবশ্যক
 export {};
