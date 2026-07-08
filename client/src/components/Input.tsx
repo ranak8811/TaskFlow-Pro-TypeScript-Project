@@ -1,14 +1,16 @@
-import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes, Ref } from "react";
 
 // ইনপুটের নিজস্ব প্রপস ও নেটিভ অ্যাট্রিবিউট ইন্টারফেস এক্সটেন্ড করলাম
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  ref?: Ref<HTMLInputElement>;
 }
 
 export default function Input({
   label,
   error,
+  ref,
   className = "",
   ...props
 }: InputProps) {
@@ -18,6 +20,7 @@ export default function Input({
         <label className="text-sm font-medium text-slate-300">{label}</label>
       )}
       <input
+        ref={ref}
         className={`px-4 py-2.5 bg-slate-900 border ${
           error
             ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
