@@ -47,6 +47,7 @@ coverage/
 # Project Specific files
 Instructions/*
 Necessary_Files/*
+Project_building_instructions/*
 
 # Prisma files
 server/src/generated/*
