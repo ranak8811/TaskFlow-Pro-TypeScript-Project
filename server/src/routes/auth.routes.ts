@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { login, refreshToken } from "../controllers/auth.controller.js";
+import { signup } from "../controllers/auth.controller.js";
 
 const router = Router();
 
-router.post("/login", login);
-router.post("/refresh", refreshToken);
+// সাইন-আপ পোস্ট এপিআই রাউট ম্যাপ করলাম
+router.post("/signup", signup);
 
 export default router;
