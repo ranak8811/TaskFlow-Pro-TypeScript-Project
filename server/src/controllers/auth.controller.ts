@@ -1,63 +1,65 @@
-import { RequestHandler } from "express";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-  verifyToken,
-  UserPayload,
-} from "../utils/jwt.js";
-import { config } from "../config/env.js";
-import { AppError } from "../utils/app-error.js";
+import { Request, Response, NextFunction } from "express";
+import bcrypt from "bcryptjs";
+import { prisma } from "../config/db.js";
+import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 
-// লগইন কন্ট্রোলার (মক ইউজার ডাটা অনুযায়ী টোকেন ইস্যু করবে)
-export const login: RequestHandler = async (req, res, next) => {
+// সাইন-আপ কন্ট্রোলার মেথড
+export async function signup(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
-    const { email } = req.body;
-    if (!email) {
-      throw new AppError("Email is required", 400);
+    const { email, password, name } = req.body;
+
+    // ১. প্রারম্ভিক ইনপুট ভ্যালিডেশন চেক
+    if (!email || !password || !name) {
+      res
+        .status(400)
+        .json({ error: "Missing required fields (email, password, name)" });
+      return;
     }
 
-    const userPayload: UserPayload = {
-      id: "usr-101",
-      role: "admin",
-    };
+    // ২. ইমেইল ডুপ্লিকেশন চেক
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
 
-    const accessToken = generateAccessToken(userPayload);
-    const refreshToken = generateRefreshToken(userPayload);
+    if (existingUser) {
+      res.status(400).json({ error: "User already exists with this email" });
+      return;
+    }
 
-    res.status(200).json({
-      success: true,
+    // ৩. পাসওয়ার্ড সুরক্ষিত হ্যাশ তৈরি
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // ৪. ডাটাবেজে ইউজার স্টোর
+    const user = await prisma.user.create({
       data: {
-        accessToken,
-        refreshToken,
+        email,
+        passwordHash,
+        name,
+        role: "MEMBER", // ডিফল্ট রোল MEMBER সেট করলাম
+      },
+    });
+
+    // ৫. সেশন টোকেনসমূহ জেনারেট করলাম
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    // ৬. রেসপন্স ব্যাক করলাম
+    res.status(201).json({
+      message: "User registered successfully",
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
       },
     });
   } catch (error) {
-    next(error);
+    next(error); // গ্লোবাল এরর হ্যান্ডলারে ফরোয়ার্ড করলাম
   }
-};
-
-// টোকেন রিফ্রেশ কন্ট্রোলার (নতুন অ্যাক্সেস টোকেন ইস্যু করবে)
-export const refreshToken: RequestHandler = async (req, res, next) => {
-  try {
-    const { token } = req.body;
-    if (!token) {
-      throw new AppError("Refresh token is required", 400);
-    }
-
-    const decoded = verifyToken(token, config.jwtRefreshSecret);
-
-    const newAccessToken = generateAccessToken({
-      id: decoded.id,
-      role: decoded.role,
-    });
-
-    res.status(200).json({
-      success: true,
-      data: {
-        accessToken: newAccessToken,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+}

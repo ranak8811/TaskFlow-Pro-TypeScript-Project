@@ -1,32 +1,26 @@
 import jwt from "jsonwebtoken";
-import { AppError } from "./app-error.js";
-import { UserRole } from "../types/user.js";
 
-// ১. পে-লোড ইন্টারফেস ডিক্লেয়ার করলাম
-export interface UserPayload {
+// ১. জেডব্লিউটি পে-লোডের টাইপ ইন্টারফেস
+interface UserPayload {
   id: string;
-  role: UserRole;
+  email: string;
+  role: string;
 }
 
-// ২. অ্যাক্সেস টোকেন তৈরি করার মেথড
-export function generateAccessToken(payload: UserPayload): string {
-  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET!, {
-    expiresIn: "15m",
-  });
+// ২. অ্যাক্সেস টোকেন জেনারেট করার মেথড
+export function generateAccessToken(user: UserPayload): string {
+  return jwt.sign(
+    { id: user.id, email: user.email, role: user.role },
+    process.env.JWT_ACCESS_SECRET || "default_access_secret",
+    { expiresIn: "15m" }, // ১৫ মিনিট মেয়াদ
+  );
 }
 
-// ৩. রিফ্রেশ টোকেন তৈরি করার মেথড
-export function generateRefreshToken(payload: UserPayload): string {
-  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, {
-    expiresIn: "7d",
-  });
-}
-
-// ৪. টোকেন ডিকোড ও ভেরিফাই করার মেথড
-export function verifyToken(token: string, secret: string): UserPayload {
-  try {
-    return jwt.verify(token, secret) as UserPayload;
-  } catch (error) {
-    throw new AppError("Invalid or expired token", 401);
-  }
+// ৩. রিফ্রেশ টোকেন জেনারেট করার মেথড
+export function generateRefreshToken(user: { id: string }): string {
+  return jwt.sign(
+    { id: user.id },
+    process.env.JWT_REFRESH_SECRET || "default_refresh_secret",
+    { expiresIn: "7d" }, // ৭ দিন মেয়াদ
+  );
 }
