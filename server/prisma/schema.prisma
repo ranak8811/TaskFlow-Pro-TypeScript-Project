@@ -7,20 +7,63 @@ generator client {
   output   = "../src/generated/client" // সরাসরি সোর্স ফোল্ডারে জেনারেট হবে
 }
 
-// ১. ইউজার মডেল (User Model)
+// ১. ইউজার টেবিল মডেল
 model User {
-  id    String @id @default(uuid()) // UUID প্রিমারি কি
-  name  String
-  email String @unique
-  tasks Task[] // ওয়ান-টু-মেনি রিলেশনশিপ (একজন ইউজারের অনেক টাস্ক থাকতে পারে)
+  id           String @id @default(uuid())
+  email        String @unique
+  passwordHash String
+  name         String
+  role         String @default("MEMBER") // ADMIN বা MEMBER রোল
+
+  workspaces    Workspace[] @relation("WorkspaceOwner") // মালিকানাধীন ওয়ার্কস্পেস
+  memberships   Workspace[] @relation("WorkspaceMembers") // মেম্বার হিসেবে থাকা ওয়ার্কস্পেস
+  assignedTasks Task[]
+  comments      Comment[]
 }
 
-// ২. টাস্ক মডেল (Task Model)
-model Task {
+// ২. ওয়ার্কস্পেস টেবিল মডেল
+model Workspace {
   id          String  @id @default(uuid())
+  name        String
+  description String?
+  ownerId     String
+
+  owner    User      @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members  User[]    @relation("WorkspaceMembers")
+  projects Project[]
+}
+
+// ৩. প্রজেক্ট টেবিল মডেল
+model Project {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+}
+
+// ৪. টাস্ক টেবিল মডেল
+model Task {
+  id          String    @id @default(uuid())
   title       String
   description String?
-  status      String  @default("TODO") // ডিফল্ট স্ট্যাটাস
-  userId      String
-  assignee    User    @relation(fields: [userId], references: [id]) // রিলেশনশিপ ম্যাপিং
+  status      String    @default("TODO") // TODO, IN_PROGRESS, DONE
+  priority    String    @default("MEDIUM") // LOW, MEDIUM, HIGH
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assigneeId  String?
+  assignee    User?     @relation(fields: [assigneeId], references: [id])
+  comments    Comment[]
+}
+
+// ৫. কমেন্ট টেবিল মডেল
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
 }
