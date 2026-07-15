@@ -47,15 +47,17 @@ api.interceptors.response.use(
     // টোকেন এরর বা ৪০১ Unauthorized হলে ট্রিগার হবে
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // অলরেডি টোকেন রিফ্রেশ রানিং থাকলে এই রিকোয়েস্টকে কিউ-তে রাখলাম
-        return new Promise<string>((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest); // টোকেন আসবামাত্র পুনরায় কল হবে
-          })
-          .catch((err) => Promise.reject(err));
+        try {
+          // অলরেডি টোকেন রিফ্রেশ রানিং থাকলে এই রিকোয়েস্টকে কিউ-তে রাখলাম
+          const token = await new Promise<string>((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          });
+
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest); // টোকেন আসবামাত্র পুনরায় কল হবে
+        } catch (err) {
+          return Promise.reject(err);
+        }
       }
 
       originalRequest._retry = true; // রি-লুপ প্রতিরোধ করতে ফ্ল্যাগ মার্ক করলাম
