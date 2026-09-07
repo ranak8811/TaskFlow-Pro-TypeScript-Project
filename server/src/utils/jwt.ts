@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { AppError } from "./app-error.js";
 
 // ১. জেডব্লিউটি পে-লোডের টাইপ ইন্টারফেস
 interface UserPayload {
@@ -23,4 +24,12 @@ export function generateRefreshToken(user: { id: string }): string {
     process.env.JWT_REFRESH_SECRET || "default_refresh_secret",
     { expiresIn: "7d" }, // ৭ দিন মেয়াদ
   );
+}
+
+export function verifyToken(token: string, secret: string): UserPayload {
+  try {
+    return jwt.verify(token, secret) as UserPayload;
+  } catch (error) {
+    throw new AppError("Invalid or expired authentication token", 401);
+  }
 }
