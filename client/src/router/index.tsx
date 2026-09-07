@@ -2,11 +2,16 @@ import { createBrowserRouter } from "react-router-dom";
 import App from "../App.tsx";
 import Login from "../pages/Login.tsx";
 import ProtectedRoute from "../routes/ProtectedRoute.tsx";
+import Register from "../pages/Register.tsx";
 
 export const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />, // পাবলিক রাউট
+  },
+  {
+    path: "/register",
+    element: <Register />,
   },
   {
     path: "/",

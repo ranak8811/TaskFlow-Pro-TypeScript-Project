@@ -18,6 +18,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -82,6 +83,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const signup = async (
+    name: string,
+    email: string,
+    password: string,
+  ): Promise<void> => {
+    setIsLoading(true);
+    try {
+      const response = await api.post<{
+        message: string;
+        accessToken: string;
+        refreshToken: string;
+        user: User;
+      }>("/auth/signup", { name, email, password });
+
+      const { accessToken, refreshToken, user: registeredUser } = response.data;
+
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("user", JSON.stringify(registeredUser));
+
+      setUser(registeredUser);
+    } catch (error) {
+      console.error("Signup failed:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
 
@@ -91,7 +121,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading, signup }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import React, { useState } from "react";
 
@@ -159,9 +159,12 @@ const Login = () => {
         {/* ফুটার লিঙ্ক */}
         <div className="text-center text-xs text-slate-400">
           Don't have an account?{" "}
-          <span className="text-indigo-400 hover:text-indigo-300 font-medium">
-            Contact your administrator
-          </span>
+          <Link
+            to="/register"
+            className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+          >
+            Sign up
+          </Link>
         </div>
       </div>
     </div>

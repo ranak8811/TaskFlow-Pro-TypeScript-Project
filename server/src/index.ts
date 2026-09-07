@@ -1,9 +1,17 @@
 import express from "express";
 import type { Request, Response } from "express";
 import authRouter from "./routes/auth.routes.js"; // ১. অথ রাউটার ইম্পোর্ট
+import cors from "cors";
 
 const app = express();
 const PORT = 3000;
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 
