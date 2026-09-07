@@ -1,18 +1,24 @@
-import { createContext, useContext, useState } from "react";
-import type { ReactNode } from "react";
-import { api } from "../utils/api.ts"; // ১. আমাদের টাইপ-সেফ এক্সিওস ক্লায়েন্ট ইম্পোর্ট করলাম
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { api } from "../utils/api";
 
 export interface User {
   id: string;
+  name: string;
   email: string;
-  role: "admin" | "member";
+  role: "ADMIN" | "MEMBER";
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string) => Promise<void>;
-  logout: () => void;
   isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -23,44 +29,65 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // ২. রিয়াল লগইন মেথড কনফিগার করলাম
-  const login = async (email: string): Promise<void> => {
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const token = localStorage.getItem("accessToken");
+      const storedUser = localStorage.getItem("user");
+
+      if (token && storedUser) {
+        try {
+          setUser(JSON.parse(storedUser) as User);
+        } catch (error) {
+          console.error("Failed to parse stored user", error);
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("user");
+        }
+      }
+
+      setIsLoading(false);
+    };
+    initializeAuth();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
+
     try {
-      // ব্যাকএন্ডের রিয়াল লগইন এপিআই কল করলাম
-      const response = await api.post<{
-        success: boolean;
-        data: {
-          accessToken: string;
-          refreshToken: string;
-        };
-      }>("/auth/login", { email });
+      const response = api.post<{
+        message: string;
+        accessToken: string;
+        refreshToken: string;
+        user: User;
+      }>("/auth/login", { email, password });
 
-      const { accessToken, refreshToken } = response.data.data;
+      const {
+        accessToken,
+        refreshToken,
+        user: loggedInUser,
+      } = (await response).data;
 
-      // সঠিক টোকেনসমূহ লোকাল স্টোরেজে সেট করলাম
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("user", JSON.stringify(loggedInUser));
 
-      setUser({
-        id: "usr-101",
-        email,
-        role: "admin",
-      });
-    } catch (err) {
-      console.error("Login Error:", err);
-      throw err;
+      setUser(loggedInUser);
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = (): void => {
+  const logout = () => {
     setUser(null);
+
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
   };
 
   return (
@@ -72,8 +99,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
+
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
+
   return context;
 }
