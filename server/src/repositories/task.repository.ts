@@ -2,19 +2,24 @@ import { prisma } from "../config/db.js";
 import { Task } from "../generated/client/client.js";
 
 export class TaskRepository {
-  static async create(title: string, userId: string): Promise<Task> {
+  static async create(
+    title: string,
+    projectId: string,
+    assigneeId?: string,
+  ): Promise<Task> {
     return prisma.task.create({
       data: {
         title,
-        userId,
+        projectId,
+        ...(assigneeId && { assigneeId }),
       },
     });
   }
 
-  static async findByUserId(userId: string): Promise<Task[]> {
+  static async findByUserId(assigneeId: string): Promise<Task[]> {
     return prisma.task.findMany({
       where: {
-        userId,
+        assigneeId,
       },
     });
   }

@@ -22,7 +22,7 @@ export function authenticateUser(
     const decoded = verifyToken(token, config.jwtAccessSecret);
 
     // req.user এ ডিকোড করা ইউজার পেলোড সেট করলাম
-    req.user = decoded;
+    req.user = decoded as { id: string; role: any };
     next();
   } catch (error) {
     next(error);
